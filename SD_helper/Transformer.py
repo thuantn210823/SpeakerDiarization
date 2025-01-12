@@ -5,7 +5,7 @@ from torch import nn
 
 import copy
 
-from Attention import RelPartialLearnableMultiheadAttn
+from .Attention import RelPartialLearnableMultiheadAttn
 
 def _get_clones(module, N):
     # FIXME: copy.deepcopy() is not defined on nn.module

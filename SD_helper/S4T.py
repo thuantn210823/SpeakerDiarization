@@ -31,13 +31,15 @@ class ModelCheckpoint:
     def _save(self, 
               model,
               monitor,
-              epoch):
+              epoch,
+              history):
         if 'epoch' in self.filename:
             filename = self.filename%(epoch, monitor) + '.ckpt'
         else:
             filename = self.filename%(monitor) + '.ckpt'
         ckpt = {'state_dict': model.state_dict(),
-                'last_epoch': epoch + 1}
+                'last_epoch': epoch + 1,
+                'history': history}
         torch.save(ckpt, filename)
         return filename
 
@@ -45,14 +47,16 @@ class ModelCheckpoint:
                model: Callable,
                dataloader: Callable,
                epoch: int,
-               logging: dict):
+               logging: dict,
+               history: dict):
         len_dataloader = len(dataloader)
         monitor = sum(logging[self.monitor][-len_dataloader:])/len_dataloader
         if len(self.ckpt['name']) < self.save_top_k:
             self.ckpt['monitor'].append(monitor)
             filename = self._save(model,
                                   monitor,
-                                  epoch)
+                                  epoch,
+                                  history)
             self.ckpt['name'].append(filename)
         else:
             monitor_log = np.array(self.ckpt['monitor'])
@@ -68,7 +72,8 @@ class ModelCheckpoint:
                 self.ckpt['monitor'][idx] = monitor
                 filename = self._save(model, 
                                       monitor,
-                                      epoch)
+                                      epoch,
+                                      history)
                 self.ckpt['name'][idx] = filename
 
 class SDataModule:
@@ -190,11 +195,14 @@ class Trainer:
                               weights_only = False)
             model.load_state_dict(ckpt['state_dict'])
             start_epoch = ckpt['last_epoch']
+            history = ckpt['history']
         else:
             start_epoch = 0
-        model = model.to(self.device)
+            history = collections.defaultdict(list)
+        if len(self.devices) == 1:
+            model = model.to(self.device)
         self._prepare(model, dataloader)
-        self._loop(model, start_epoch)
+        self._loop(model, start_epoch, history)
         return self.history
 
     def evaluate(self,
@@ -205,9 +213,10 @@ class Trainer:
             raise NotImplementedError()
 
     def _loop(self,
-             model: Callable,
-             start_epoch: int):
-        self.history = collections.defaultdict(list)
+              model: Callable,
+              start_epoch: int,
+              history: dict):
+        self.history = history
         for epoch in range(start_epoch, self.max_epochs):
             # Training
             model.train()
@@ -261,13 +270,15 @@ class Trainer:
                                    len(self.dataloader.self_val_dataloader), 
                                    ' - %.2fs/step'% self._time(time_start, time_stop) + logging)
 
+            self._sumup(model)        
+
             if self.enable_checkpointing:
                 if self.model_ckpt_callback:
                     self.model_ckpt.update(model,
                                            self.dataloader.self_val_dataloader,
                                            epoch,
-                                           model.logging)
-            self._sumup(model)        
+                                           model.logging,
+                                           self.history)
     
     def _batch_cast(self, 
                     batch: List[Any],
@@ -287,6 +298,7 @@ class Trainer:
                                 v = v.to(device)
                             el[k] = v
                     casted_em.append(el)
+                em = casted_em
             casted_batch.append(em)
         return casted_batch
     

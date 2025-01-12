@@ -5,8 +5,12 @@ from torch import nn
 
 import math
 
-from ASR_utils import _init_weight
-from Embedding import PositionalEmbedding
+from .Embedding import PositionalEmbedding
+
+def _init_weight(m):
+    nn.init.kaiming_normal_(m.weight)
+    if m.bias is not None:
+        nn.init.constant_(m.bias, 0)
 
 def masked_softmax(x: torch.Tensor, 
                    key_padding_mask: Optional[torch.Tensor] = None,
@@ -198,15 +202,12 @@ class RelPartialLearnableMultiheadAttn(RelMultiheadAttention):
                 query: torch.Tensor,
                 key: torch.Tensor,
                 value: torch.Tensor,
-                reversed: bool = True,
                 zero_triu: bool = False,
                 key_padding_mask: Optional[torch.Tensor] = None,
                 attn_mask: Optional[torch.Tensor] = None,
                 need_weights: bool = True):
         bs = query.shape[0]
         PosEmbMat = self.posemb(key).unsqueeze(0).repeat_interleave(bs, dim = 0).to(query)
-        if reversed:
-            PosEmbMat = PosEmbMat[torch.arange(0, PosEmbMat.shape[0]).tolist()[::-1], :]
         return super().forward(query,
                                key,
                                value,
