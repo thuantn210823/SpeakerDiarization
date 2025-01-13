@@ -154,7 +154,7 @@ def infer(args):
         line[7] = str(pred_spk_ids[temp_spk_ids.index(spk)])
         rttm.append(' '.join(line))
     rttm = '\n'.join(rttm)
-    with open(f'{fname}.rttm', 'w') as f:
+    with open(f'pred_{fname}.rttm', 'w') as f:
         f.write(rttm)
 
 if __name__ == '__main__':

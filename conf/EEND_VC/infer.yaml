@@ -7,7 +7,7 @@ num_layers: 4
 n_speakers: 2
 d_spk: 256
 n_all_speakers: 2338
-ckpt_path: pretrained_models\eend-vc-dilibrisc2.ckpt
+ckpt_path: pretrained_models/eend-vc-dilibrisc2.ckpt
 rate: 16000
 chunk_size: 30
 win_length: 400

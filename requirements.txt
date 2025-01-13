@@ -1,5 +1,5 @@
-torch
-scipy
-sklearn
 numpy
 librosa
+sklearn
+torch
+scipy
