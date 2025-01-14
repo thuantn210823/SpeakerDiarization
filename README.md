@@ -34,7 +34,7 @@ py train.py --config_yaml conf/EEND_VC/train.yaml
 ```
 ```sh
 cd SpeakerDiarization
-py infer.py --config_yaml conf/EEND_VC/train.yaml --audio_path example/1089-121-2-2.wav
+py infer.py --config_yaml conf/EEND_VC/infer.yaml --audio_path example/1089-121-2-2.wav
 ```
 `Note:` Some arguments in these `train.yaml` files are still left blank waiting for you to complete. 
 
